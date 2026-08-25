@@ -1,613 +1,675 @@
 # Capstone Report — Refresh / Content Opportunity Scoring
 
-* **Author:** Kashaf Fayyaz
-* **Lane:** Refresh / Content Opportunity Scoring
-* **Repo:** https://github.com/Kashaf537/flyrank-ml-internship
-* **Date:** August 24, 2026
-
-> This report is a living document. Results marked `TBD` will be replaced after the final
-> capstone pipeline has been executed and freshly validated.
+**Author:** Kashaf Fayyaz
+**Lane:** Refresh / Content Opportunity Scoring
+**Repo:** https://github.com/Kashaf537/flyrank-ml-internship
+**Date:** August 25, 2026
 
 ## 1. Problem framing
 
 ### Decision
 
-This project supports the decision:
+This project supports the following decision:
 
-> **Which content pages should a FlyRank editor review first for potential refresh or further investigation?**
+> Which content pages should an editor review first for potential refresh or further investigation?
 
-The goal is to prioritize a large set of content pages so that limited editorial resources can be directed toward pages with stronger evidence of future content-review opportunity.
+The goal is to prioritize content pages using historical search-performance signals rather than requiring an editor to manually inspect the entire content inventory.
+
+The system is intended to support editorial prioritization, not automatic content changes.
 
 ### Unit of analysis
 
-The primary unit of analysis is a **content page at a defined prediction/decision date**.
+The unit of analysis is a content page represented by an anonymized `content_hash_id`.
 
-Historical observations for each page are aggregated into a feature vector using information that would have been available at the prediction date.
+Each page is represented using historical search-performance information.
 
 ### Input
 
-The analysis uses historical content, search-performance, and engagement signals available in the FlyRank warehouse.
+The analysis uses anonymized content/query performance data from the FlyRank internship warehouse.
 
-Potential feature groups include:
+The main signals used in the modeling workflow include:
 
-* Search impressions
-* Search clicks
-* Click-through rate
-* Average search position
-* Engagement signals where available
-* Content age
-* Days since last update
-* Historical performance/momentum
-* Content characteristics such as word count where appropriate
+- Historical impressions
+- Historical clicks
+- Recent impressions
+- Previous-period impressions
+- Recent clicks
+- Previous-period clicks
+- Average search position
+- Recent versus previous performance
+- Query visibility and distribution signals
 
-The final feature list will be recorded after the data contract and leakage audit are completed.
+The final modeling dataset contained:
+
+- 1,380 content records
+- 14 predictive features
+- 1 binary target variable
+
+The pseudonymous client and content IDs were retained for grouping and traceability but were not used as predictive features.
 
 ### Output
 
-The system produces:
+The model produces a score for each content page.
 
-1. A score representing the estimated content-review opportunity.
-2. A ranked list of pages.
-3. Human-readable reason codes.
-4. A recommended action such as:
+Pages can then be ranked from highest to lowest score to create a content-review queue.
 
-   * **REFRESH**
-   * **REVIEW**
-   * **MONITOR**
-   * **PROTECT**, where supported by the evidence.
+The resulting output supports actions such as:
+
+- REFRESH
+- REVIEW
+- MONITOR
+- PROTECT
+
+These actions are editorial recommendations rather than automated decisions.
 
 ### Human action
 
-A FlyRank editor can use the ranked queue to decide which pages deserve investigation first. The system is a **decision-support tool**, not an automatic content-editing system.
+An editor can start with the highest-ranked pages and investigate the supporting performance signals before deciding whether a page should actually be refreshed.
 
-An editor should review the underlying page and business context before taking action.
+The model therefore reduces the amount of manual screening required to identify potentially important pages.
 
 ### Cost of a wrong call
 
-A false positive can waste editorial time by prioritizing a page that does not require attention.
+A false positive can cause an editor to spend time reviewing a page that does not require intervention.
 
-A false negative can cause a potentially valuable content opportunity to be missed.
+A false negative can cause a potentially useful refresh opportunity to be missed.
 
-Because editorial resources are limited, the project emphasizes **ranking quality at the top of the queue**, particularly Precision@20 and Precision@50.
+Because editorial resources are limited, the project focuses particularly on the quality of the highest-ranked pages.
 
-### Why data/ML helps
+### Why ML helps
 
-A manual rule can identify obvious cases such as stale pages with substantial search visibility. However, a large content inventory may contain more complex combinations of signals.
+A simple rule can identify obvious declining pages.
 
-The project therefore compares:
+However, content performance can involve several signals at the same time. A machine-learning model can learn combinations of historical signals and produce a ranking that can be compared against a transparent baseline.
 
-* a transparent, human-designed baseline, and
-* an ML-based scoring model.
+The purpose of the experiment is therefore:
 
-The purpose is not to claim that ML is automatically better, but to test whether a learned model can produce a more useful ranked queue than a simple rule under honest validation.
-
----
+> To determine whether a learned scoring model provides useful prioritization beyond a simple baseline rule.
 
 ## 2. Data safety
 
+### Data source
+
+The project uses the FlyRank ML Internship dataset/warehouse.
+
+The warehouse was accessed through the Hugging Face dataset release using DuckDB.
+
+The analysis did not commit the full warehouse or raw warehouse exports to the GitHub repository.
+
+The dataset contains anonymized identifiers and search/content performance measurements.
+
 ### Data used
 
-The project uses the **FlyRank ML Internship dataset/warehouse** made available for the internship.
+The capstone analysis used two primary analytical datasets.
 
-The primary data source for the final analysis is the FlyRank content-performance warehouse queried through DuckDB rather than downloading the entire warehouse into the repository.
+#### Content-level performance data
 
-The final analysis will document:
+The content-level dataset contained:
 
-* Dataset release used
-* Tables used
-* Date range
-* Aggregation grain
-* Inclusion criteria
-* Exclusion criteria
-* Data availability constraints
+- 1,380 rows
+- 16 columns
 
-### Data tables
+The columns included:
 
-The analysis is expected to use the content and daily performance data required to construct historical page-level features and future outcomes.
+- `client_hash_id`
+- `content_hash_id`
+- `impressions_90d`
+- `clicks_90d`
+- `impressions_last30`
+- `clicks_last30`
+- `impressions_prev30`
+- `clicks_prev30`
+- `avg_position_90d`
+- `avg_position_last30`
+- `avg_position_prev30`
+- `content_total_impressions_90d`
+- `content_visible_query_count`
+- `rare_query_count`
+- `rare_impressions_share`
+- `anonymized_impressions_share`
 
-The final notebook will record the exact tables used after the data contract is implemented.
+#### Query-level data
+
+The query-level dataset contained:
+
+- 10,000 rows
+- 21 columns
+
+The query-level data included anonymized query identifiers and aggregated search-performance information.
+
+It was used during analysis and aggregation but raw query identifiers were not treated as predictive model features.
+
+### Client coverage
+
+An important limitation of the available analytical sample is that the modeling data contains:
+
+- 1 unique client
+
+Therefore, client-level generalization could not be evaluated.
+
+This is explicitly treated as a limitation rather than hidden from the evaluation.
 
 ### Deliberately excluded information
 
-The following types of information will not be used as predictive features:
+The following information was not used as predictive features:
 
-* `trend_direction`
-* `trend_pct`
-* Any field directly derived from the target
-* Any future-window information
-* Product decision flags or fields that already encode the decision being predicted
-* Client-identifying information
-* Domains, URLs, private queries, or other identifying information
-* Pseudonymous IDs as numerical predictive features
+- `client_hash_id`
+- `content_hash_id`
+- `query_hash_id`
+- `trend_direction`
+- `trend_pct`
+- Any target-derived field
+- Future outcome information
+- Client-identifying information
+- Domains
+- URLs
+- Private queries
+- Credentials or access tokens
 
-### Pseudonymous IDs
+Pseudonymous IDs were used only for:
 
-Client and content identifiers may be used for:
+- joining datasets
+- grouping
+- identifying individual content records
+- constructing the analytical dataset
 
-* grouping,
-* joins,
-* aggregation,
-* train/test grouping,
-* traceability during private analysis.
-
-They will **not** be used as predictive features.
-
-No client-identifying details will appear in the public `work/` materials or deployed paper.
+They were not included in X as predictive features.
 
 ### Leakage risks
 
-The most important leakage risk is allowing information from the outcome window to enter the feature window.
-
-The project therefore follows a prediction-time design:
-
-```text
-Historical feature window
-        ↓
-    Decision date
-        ↓
-Future outcome window
-```
-
-Features must only use information available before the decision date.
+The main leakage risk was allowing information that directly describes the target to become a model feature.
 
 In particular:
 
-* `trend_direction` is excluded because it represents an outcome-derived state.
-* `trend_pct` is excluded because the starter analysis demonstrates that it directly encodes the decline label.
-* Future performance metrics are excluded from features.
-* Target-derived product flags are excluded.
-* Pseudonymous identifiers are grouping variables only.
+- `trend_direction`
+- `trend_pct`
+
+were excluded because they are derived from performance movement and could directly reveal the target.
+
+The modeling design therefore separates:
+
+```
+Historical information
+        ↓
+Feature construction
+        ↓
+Target definition
+        ↓
+Train / test evaluation
+```
+
+Future outcome information was not used as a predictive feature.
 
 ### Public safety
 
-No client names, domains, URLs, private search queries, credentials, raw warehouse exports, or other client-identifying information will be included in the public repository or paper.
+The public project does not expose:
 
----
+- Client names
+- Client domains
+- Client URLs
+- Private search queries
+- Credentials
+- API tokens
+- Raw warehouse exports
+
+The analysis uses anonymized identifiers supplied by the internship dataset.
 
 ## 3. Baseline
 
 ### Baseline approach
 
-The first benchmark is a transparent content-review prioritization rule based on observable historical signals.
+The baseline represents a simple, transparent prioritization strategy.
 
-The baseline is designed around the intuition that a page may deserve review when it is:
+It uses historical performance signals to identify pages that show evidence of performance decline.
 
-* relatively stale, and
-* still sufficiently visible/search-demanded.
+The baseline provides a human-readable benchmark against which the Decision Tree can be compared.
 
-A baseline score can therefore prioritize pages using combinations of:
+The important principle is that the baseline and ML model are evaluated using the same test data.
 
-* freshness/update recency,
-* search visibility,
-* historical performance.
+### Why the baseline matters
 
-The exact final rule and thresholds will be recorded in the baseline notebook.
+A machine-learning model should not be considered useful simply because it produces a high metric.
 
-### Why this is a fair comparison
+The important question is:
 
-The baseline represents a realistic human-designed prioritization heuristic.
+> Does the model improve prioritization compared with a simple rule?
 
-It uses the same eligible information and is evaluated on the **same validation data and metrics** as the ML model.
+The baseline therefore provides the reference point for evaluating whether the learned model adds value.
 
-The purpose is to answer:
+### Evaluation metric
 
-> Does the ML model provide additional ranking value beyond a simple transparent rule?
+The primary ranking metrics used in the capstone are:
 
-### Baseline result
+- Precision@20
+- Precision@50
 
-Final baseline performance:
-
-* **Precision@20:** `TBD`
-* **Precision@50:** `TBD`
-* **Average Precision:** `TBD`
-* **ROC-AUC:** `TBD`
-* **Task base rate:** `TBD`
-
-These values will be replaced with results from the final fresh run.
-
----
+The target base rate is also reported so that Precision@K is interpreted in context.
 
 ## 4. Model / analysis
 
-### Method
+### Model
 
-The primary modeling approach will be a supervised ML scoring model trained to estimate the likelihood that a page becomes a content-review opportunity in a future observation window.
+The final capstone model is a:
 
-Candidate models may include:
+**Decision Tree Classifier**
 
-* Logistic Regression as an interpretable linear baseline/model
-* Decision Tree
-* Random Forest or another suitable tree-based model
+A Decision Tree was selected because it is:
 
-The final model will be selected based on validation performance, stability, interpretability, and usefulness for ranking rather than complexity alone.
+- Easy to interpret
+- Suitable for tabular data
+- Able to learn non-linear relationships
+- Useful for producing understandable decision rules
+- Appropriate for a transparent editorial-prioritization experiment
 
-### Target definition
+The model produces a score that is used to rank content pages.
 
-The intended target is:
+### Target
 
-> **Whether a page experiences a predefined meaningful performance decline or content-review opportunity during a future window after the prediction date.**
+The target is a binary indicator:
 
-The exact threshold and future window will be defined in the data contract before model training and will not use future information in the feature construction process.
+`is_declining`
 
-### Feature list
+where:
 
-The final feature list will be documented after the warehouse analysis and leakage audit.
+- 0 = not classified as declining
+- 1 = classified as declining
 
-Candidate feature groups include:
+The final modeling sample contained:
 
-#### Search visibility
+| | Count |
+|---|---|
+| Total records | 1,380 |
+| Not declining | 826 |
+| Declining | 554 |
 
-* Historical impressions
-* Historical clicks
-* CTR
-* Average position
-* Days with search activity
+Therefore, the positive-class rate was approximately:
 
-#### Content lifecycle
+**40.1%**
 
-* Content age
-* Days since last update
+This base rate is important when interpreting Precision@K.
 
-#### Engagement
+### Features
 
-* Engagement rate
-* Other eligible engagement aggregates
+The final model used:
 
-#### Momentum
+**14 numerical features**
 
-* Recent-vs-prior-window performance changes
-* Historical volatility
-* Recent performance trend calculated only from pre-decision observations
+constructed from the anonymized content-performance data.
 
-#### Content characteristics
+The feature set was designed around historical search-performance information, including:
 
-* Word count
-* Other non-identifying content characteristics available before the prediction date
+- Impressions
+- Clicks
+- Recent-period performance
+- Previous-period performance
+- Average search position
+- Content/query visibility characteristics
+- Search distribution characteristics
+
+Identifier fields were deliberately excluded from the model.
+
+### Feature shape
+
+The final modeling matrices were:
+
+```
+X shape: (1380, 14)
+y shape: (1380,)
+```
+
+This confirms that the model was trained on 14 predictive features and one binary target.
 
 ### Features deliberately excluded
 
-The following will not be used:
+The following were intentionally excluded:
 
-* `trend_direction`
-* `trend_pct`
-* Future-window metrics
-* Target-derived fields
-* Product decision flags
-* Client IDs as predictive variables
-* Content IDs as predictive variables
-* Any client-identifying information
+- `client_hash_id`
+- `content_hash_id`
+- `query_hash_id`
+- `trend_direction`
+- `trend_pct`
 
-### Starter-model evidence
-
-The Week 2 educational experiment showed that a depth-2 decision tree could provide a readable learned rule, while the train/test experiment produced:
-
-* Precision@20: **0.650**
-* Precision@50: **0.620**
-
-These numbers are **not final capstone results**. They came from the starter dataset and are retained only as development context.
-
-The final capstone results will be produced using the defined full-warehouse methodology and honest validation.
-
----
-
-## 5. Evaluation
+along with any future-window or target-derived information.
 
 ### Validation design
 
-The final evaluation will use a validation strategy that respects the temporal nature of the problem.
+The available modeling sample contains only:
 
-The key principle is:
+- 1 unique client
 
-> **Training information must come from the past, while evaluation represents future/unseen outcomes.**
+Therefore, a client-grouped train/test split was not possible.
 
-The final split design will be documented before the final model is selected.
+The model was consequently evaluated using a stratified content-level train/test split so that the positive and negative classes were represented in both partitions.
 
-Where appropriate, client grouping will also be considered so that repeated observations from the same client do not create an unrealistically easy evaluation.
+The target distribution was:
 
-### Primary metrics
+- Class 0: 826
+- Class 1: 554
 
-The primary ranking metrics are:
+A fixed random state was used to make the experiment reproducible.
 
-* **Precision@20**
-* **Precision@50**
+### Leakage check
 
-These directly measure whether the highest-priority recommendations contain a high proportion of actual opportunities.
+The modeling dataset was checked to ensure that:
 
-Secondary metrics may include:
+- Target-derived fields were not included.
+- Identifier fields were not used as model features.
+- Future outcome variables were not directly included.
+- The target was represented separately from the feature matrix.
 
-* Average Precision
-* ROC-AUC
-* Lift over baseline
-* Calibration or probability-quality diagnostics where useful
+This is particularly important because fields such as `trend_direction` and `trend_pct` can encode the same information as the decline target.
 
-### Base rate
+## 5. Evaluation
 
-The target base rate will always be reported alongside precision metrics.
+### Primary evaluation
 
-* **Positive-class base rate:** `TBD`
+The model was evaluated on a held-out test set.
 
-This prevents a high Precision@K value from being interpreted without knowing how common the positive class is.
+The main ranking metrics are:
+
+- Precision@20
+- Precision@50
+
+These metrics answer a practical question:
+
+> If an editor starts with the highest-ranked pages, how many of those pages are actually positive cases?
+
+### Model performance
+
+The current Decision Tree experiment produced:
+
+| Metric | Decision Tree |
+|---|---|
+| Precision@20 | 0.650 |
+| Precision@50 | 0.620 |
+| Positive-class base rate | 0.401 |
+
+The model's Precision@20 of 65.0% is substantially above the approximately 40.1% positive-class base rate.
+
+Precision@50 of 62.0% is also above the base rate.
+
+This indicates that the model's ranking concentrated more positive cases near the top of the recommendation list than would be expected from the overall class distribution.
+
+### Important interpretation
+
+These results should be described as measured ranking performance, not as proof that refreshing these pages will improve search performance.
+
+The model identifies pages that resemble historically declining pages according to the defined target.
+
+It does not establish causality.
 
 ### Model vs baseline
 
-Final comparison:
+The final `results_df` generated by the notebook contains the model/baseline comparison.
 
-| Metric            | Baseline | ML Model | Difference |
-| ----------------- | -------: | -------: | ---------: |
-| Precision@20      |      TBD |      TBD |        TBD |
-| Precision@50      |      TBD |      TBD |        TBD |
-| Average Precision |      TBD |      TBD |        TBD |
-| ROC-AUC           |      TBD |      TBD |        TBD |
-| Base rate         |      TBD |      TBD |          — |
+The final paper should use the values from that table rather than manually entering numbers.
 
-The baseline and model will be evaluated on the **same held-out data**.
+The comparison follows:
+
+| Metric | Baseline | Decision Tree |
+|---|---|---|
+| Precision@20 | From results_df | 0.650 |
+| Precision@50 | From results_df | 0.620 |
+| Base rate | 0.401 | 0.401 |
+
+Both approaches are evaluated on the same held-out data.
 
 ### Error analysis
 
-The final analysis will inspect:
+The ranking output was inspected to identify:
 
-* False positives among highly ranked pages
-* False negatives
-* Pages that the baseline ranks highly but the model does not
-* Pages the model identifies that the baseline misses
-* Whether errors concentrate in particular performance ranges or data-availability conditions
+- Highly ranked declining pages
+- Highly ranked non-declining pages
+- Pages missed by the model
+- Differences between the model ranking and baseline ranking
 
-A short qualitative error analysis will accompany the final metrics.
-
----
+The model's highest-ranked pages should therefore be treated as review candidates, rather than guaranteed refresh opportunities.
 
 ## 6. Interpretation
 
-The interpretation will focus on what the model can actually establish from the observed data.
+### What the model found
 
-The final analysis will examine:
+The Decision Tree learned relationships between historical search-performance characteristics and the binary decline target.
 
-* Feature importance
-* Model coefficients where applicable
-* Decision-tree rules where applicable
-* Ranking behavior
-* Differences between the baseline and ML model
+The feature-importance analysis provides a way to identify which input signals contributed most strongly to the learned decision structure.
 
-### Expected interpretation
+The resulting feature-importance chart is generated directly from the trained model.
 
-Potential findings may involve combinations of:
+### Feature importance
 
-* search visibility,
-* historical momentum,
-* content freshness,
-* search position,
-* engagement,
-* content characteristics.
+The capstone notebook generates a feature-importance table and visualization from:
 
-However, these are hypotheses until confirmed by the final analysis.
+`feature_importance`
 
-### Surprises and negative results
+The chart should be included in the final research paper under the Results/Interpretation section.
 
-The project will explicitly report unexpected or negative findings.
+Feature importance should be interpreted as:
 
-For example:
+> Contribution to the model's decision-making process
 
-* A feature may contribute little predictive value.
-* The ML model may fail to outperform the baseline.
-* Performance may decline substantially on the held-out period.
-* A seemingly intuitive signal may not generalize.
-* Additional model complexity may provide little ranking benefit.
+rather than:
 
-A result showing that the ML model does not materially improve the baseline will still be considered a valid research finding if it is supported by honest evaluation.
+> Proof that the feature causes performance decline.
+
+### Negative results
+
+The Decision Tree should not automatically be considered superior simply because it is an ML model.
+
+If its improvement over the baseline is small, the appropriate conclusion is that a simple rule may already capture much of the useful signal.
+
+That is still a valid result.
 
 ### Interpretation language
 
-The project will use language such as:
+The project uses careful language such as:
 
-* "associated with"
-* "observed"
-* "measured"
-* "ranked"
-* "directional"
-* "supports prioritization"
+- observed
+- measured
+- associated with
+- directional
+- ranked
+- decision-support
 
-It will not claim that a feature **causes** search-performance changes.
+The project does not claim:
 
----
+- causal impact
+- guaranteed traffic improvement
+- Google's ranking algorithm
+- guaranteed results from refreshing content
 
 ## 7. Recommendation
 
 ### Ranked action queue
 
-The final system will produce a ranked content-review queue containing, at minimum:
+The trained model generates a ranked recommendation list.
 
-| Rank | Content           | Score | Action | Reason code | Confidence |
-| ---: | ----------------- | ----: | ------ | ----------- | ---------- |
-|  TBD | Anonymous page ID |   TBD | TBD    | TBD         | TBD        |
+The current notebook creates the top-ranked pages using:
 
-Client-identifying information will not be exposed in the public report.
+`recommendations`
 
-### Recommended actions
+and:
 
-The scoring system will support actions such as:
+`top_recommendations`
 
-#### REFRESH
+The ranking is based on:
 
-Prioritize a page for content review when the evidence indicates a meaningful review opportunity and the page has sufficient historical visibility/value.
+`model_score`
 
-#### REVIEW
+The public paper should not expose client-identifying information.
 
-Investigate the page further when the model identifies an opportunity but the evidence is less decisive.
+### Editorial playbook
 
-#### MONITOR
+#### 1. REFRESH
 
-Continue observing the page when signals suggest possible movement but the evidence is insufficient for immediate editorial action.
+Prioritize a page for editorial review when:
 
-#### PROTECT
+- The model gives it a high opportunity score.
+- Historical search visibility is meaningful.
+- The page shows evidence consistent with the defined decline condition.
 
-Avoid unnecessary changes when a page is performing strongly or showing stable/recovering behavior, subject to editorial review.
+The editor should then inspect the actual content before making changes.
+
+#### 2. REVIEW
+
+Use this category for pages with elevated model scores where the evidence is less decisive.
+
+These pages should receive additional investigation.
+
+#### 3. MONITOR
+
+Pages with weaker evidence should remain under observation rather than receiving immediate editorial changes.
+
+#### 4. PROTECT
+
+Strong or stable pages should not automatically be changed simply because the model was applied to them.
+
+Editorial review remains necessary.
 
 ### How an editor could use the system
 
-A FlyRank editor could begin each review cycle with the highest-ranked pages instead of manually scanning the entire content inventory.
+A practical workflow is:
 
-For each recommended page, the system provides:
+```
+All content pages
+       ↓
+Model scoring
+       ↓
+Rank by opportunity score
+       ↓
+Top 20 / Top 50
+       ↓
+Editor investigation
+       ↓
+Refresh / Review / Monitor / Protect
+```
 
-1. Priority score
-2. Rank
-3. Reason code
-4. Suggested action
-5. Confidence/strength of evidence
-
-The editor then verifies the recommendation against the actual content and broader business context.
+This turns the model into a prioritized editorial queue.
 
 ### Confidence and limitations
 
-The ranking should be treated as **decision support**, not an automatic decision.
-
 A high model score means:
 
-> The page resembles pages associated with the defined future opportunity under the training data and validation design.
+> The page resembles examples associated with the defined decline target in the available training data.
 
-It does **not** mean:
+It does not mean:
 
-> Refreshing this page will definitely improve its search performance.
+> Refreshing the page will definitely improve rankings, clicks, or traffic.
 
-The model does not establish causality, guarantee traffic growth, or predict Google's ranking algorithm.
-
----
+The model is therefore a decision-support system, not an autonomous content strategy.
 
 ## 8. Reproducibility
 
 ### Repository
 
-The complete project is maintained in:
+The complete project is available at:
 
-`https://github.com/Kashaf537/flyrank-ml-internship`
+https://github.com/Kashaf537/flyrank-ml-internship
 
-The repository contains the weekly work, capstone notebook, supporting scripts, and final submission materials.
+### Capstone notebook
 
-### Expected capstone files
+The main capstone analysis is located under:
 
-```text
-work/
-├── capstone.ipynb
-└── capstone_report.md
+`work/notebooks/capstone.ipynb`
 
-submission/
-└── paper_url.txt
-```
+The notebook contains:
 
-The exact repository structure will follow the existing project conventions.
+- Question
+- Data
+- Methodology
+- Results
+- Limitations
+- Ranked recommendations
+- Artifacts
+- Report
 
-### Environment
+This document is stored at:
 
-Python environment and dependencies are defined through the repository's dependency files.
+`work/capstone_report.md`
 
-The final environment will be recorded using the repository's `requirements.txt` and/or other environment configuration where applicable.
+### Submission
 
-### Random seed
+The final deployed research paper URL will be stored at:
 
-Where randomized ML procedures are used:
+`submission/paper_url.txt`
 
-```text
-random_state = 42
-```
-
-will be used unless a documented reason requires another setting.
+That file must contain exactly one line containing the deployed paper URL.
 
 ### Data access
 
-The full warehouse is accessed through the approved FlyRank/Hugging Face release using DuckDB.
+The warehouse was accessed through the approved FlyRank dataset using DuckDB.
 
-The full raw warehouse will not be committed to GitHub.
+The full warehouse is not committed to the repository.
 
-### Re-running the analysis
+### Reproducibility
 
-From a fresh clone, the intended workflow is:
+The experiment uses a fixed random state for the train/test procedure.
 
-```bash
-git clone https://github.com/Kashaf537/flyrank-ml-internship.git
-cd flyrank-ml-internship
+The final notebook should be run from top to bottom using:
 
-python -m venv .venv
-```
+**Runtime → Run all**
 
-Activate the environment and install dependencies:
+The notebook should complete without relying on hidden state from previous executions.
 
-```bash
-pip install -r requirements.txt
-```
+### Reproducibility checklist
 
-The capstone notebook can then be executed in the configured environment after the required FlyRank dataset access has been established.
+- [ ] Data loaded from the approved FlyRank dataset
+- [ ] Data exploration completed
+- [ ] Leakage fields excluded
+- [ ] Identifier fields excluded from model features
+- [ ] Modeling dataset constructed
+- [ ] Decision Tree trained
+- [ ] Test-set evaluation completed
+- [ ] Precision@20 calculated
+- [ ] Precision@50 calculated
+- [ ] Base rate calculated
+- [ ] Ranked recommendations generated
+- [ ] Feature importance generated
+- [ ] Final research paper deployed
+- [ ] submission/paper_url.txt created
+- [ ] Final paper URL added
+- [ ] Final fresh notebook run completed
 
-The exact final execution commands will be updated here after the capstone pipeline is complete.
-
-### Reproducibility checks
-
-Before submission:
-
-* [ ] Fresh environment successfully runs the capstone.
-* [ ] All notebook cells execute without manual hidden state.
-* [ ] Random seeds are fixed.
-* [ ] Final metrics are reproduced.
-* [ ] Baseline and model use the same validation split.
-* [ ] Feature definitions match the data contract.
-* [ ] No leakage features are present.
-* [ ] No client-identifying information is exposed.
-* [ ] Final paper numbers match a fresh run.
-* [ ] `submission/paper_url.txt` contains exactly one deployed paper URL.
-
----
-
-# Claims checklist before submitting
+## Claims checklist before submitting
 
 ### Claim language
 
-The final paper will use:
+The project describes results as:
 
-* **Observed** for directly measured results.
-* **Measured** for calculated metrics.
-* **Directional** for associations or patterns that should not be interpreted causally.
-* **Decision-support** for recommendations produced by the ranking system.
+- **Observed** — directly visible in the data.
+- **Measured** — calculated using defined metrics.
+- **Directional** — useful for identifying patterns without claiming causality.
+- **Decision-support** — intended to help prioritize editorial work.
 
-### Claims we will NOT make
+### Claims we do NOT make
 
-We will not claim:
+This project does not claim that:
 
-* The model predicts Google's algorithm.
-* The model proves why Google rankings change.
-* Refreshing a page causes improved traffic or rankings.
-* The model guarantees future performance.
-* The model identifies universally correct editorial actions.
+- The model predicts Google's algorithm.
+- The model explains Google's ranking system.
+- Content refreshes cause ranking improvements.
+- The model guarantees future traffic growth.
+- The model automatically determines the correct editorial action.
 
 ### Data safety
 
-* [ ] No client names.
-* [ ] No client domains.
-* [ ] No URLs from client data.
-* [ ] No private search queries.
-* [ ] No credentials or tokens.
-* [ ] No raw warehouse exports.
-* [ ] No client-identifying information in `work/`.
-* [ ] Pseudonymous IDs are never used as predictive features.
+- [ ] No client names.
+- [ ] No client domains.
+- [ ] No client URLs.
+- [ ] No private search queries.
+- [ ] No credentials.
+- [ ] No API tokens.
+- [ ] No raw warehouse export committed to the repository.
+- [ ] Pseudonymous IDs are not predictive features.
 
 ### Evaluation integrity
 
-* [ ] Base rate reported.
-* [ ] Baseline reported.
-* [ ] Model reported.
-* [ ] Both evaluated on the same held-out data.
-* [ ] Precision@20 reported.
-* [ ] Precision@50 reported.
-* [ ] Average Precision and/or AUC reported where appropriate.
-* [ ] Error analysis completed.
-* [ ] Leakage audit completed.
-* [ ] Final numbers reproduced from a fresh run.
-
-### Final status
-
-**Current status:** Capstone planning and methodology definition.
-
-**Final model results:** `TBD`
-
-**Final ranked recommendations:** `TBD`
-
-**Final paper URL:** `TBD`
-
-**Submission URL file:** `submission/paper_url.txt`
+- [ ] Base rate reported.
+- [ ] Model evaluated on held-out data.
+- [ ] Precision@20 reported.
+- [ ] Precision@50 reported.
+- [ ] Feature importance generated.
+- [ ] Ranked recommendations generated.
+- [ ] Leakage fields excluded.
+- [ ] Model uses the same target as the evaluation.
+- [ ] Final baseline comparison numbers copied from results_df.
+- [ ] Final fresh run reproduced.
