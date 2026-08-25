@@ -1,0 +1,872 @@
+/* =========================================================
+   FLYRANK CAPSTONE — WARM EDITORIAL RESEARCH STYLE
+========================================================= */
+
+:root {
+    --bg: #f6f1e9;
+    --surface: #fffdf9;
+    --surface-soft: #f1e9dc;
+
+    --ink: #29231f;
+    --text: #514942;
+    --muted: #786f67;
+
+    --accent: #b85c38;
+    --accent-dark: #8f4027;
+    --accent-soft: #f3ddd0;
+
+    --gold: #c38a45;
+    --border: #e5d9ca;
+
+    --shadow-sm: 0 4px 18px rgba(65, 45, 30, 0.06);
+    --shadow-md: 0 12px 35px rgba(65, 45, 30, 0.09);
+}
+
+
+/* =========================================================
+   RESET
+========================================================= */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Helvetica,
+        Arial,
+        sans-serif;
+
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.75;
+
+    -webkit-font-smoothing: antialiased;
+}
+
+
+/* =========================================================
+   CONTAINER
+========================================================= */
+
+.container {
+    width: min(1120px, 91%);
+    margin: 0 auto;
+}
+
+
+/* =========================================================
+   HERO
+========================================================= */
+
+.hero {
+    position: relative;
+    overflow: hidden;
+
+    background:
+        radial-gradient(
+            circle at 85% 15%,
+            rgba(195, 138, 69, 0.18),
+            transparent 28%
+        ),
+        radial-gradient(
+            circle at 10% 90%,
+            rgba(184, 92, 56, 0.15),
+            transparent 30%
+        ),
+        #332923;
+
+    color: #fffaf3;
+
+    padding: 105px 0 92px;
+
+    border-bottom: 1px solid #4b3a31;
+}
+
+
+/* subtle decorative line */
+
+.hero::after {
+    content: "";
+
+    position: absolute;
+
+    width: 240px;
+    height: 240px;
+
+    right: -80px;
+    bottom: -120px;
+
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 50%;
+}
+
+
+.eyebrow {
+    display: inline-block;
+
+    font-size: 0.76rem;
+    font-weight: 800;
+
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+
+    color: #e8b98d;
+
+    margin-bottom: 24px;
+}
+
+
+.hero h1 {
+    max-width: 920px;
+
+    font-size: clamp(2.7rem, 6vw, 4.7rem);
+
+    line-height: 1.04;
+    letter-spacing: -0.045em;
+
+    margin-bottom: 28px;
+}
+
+
+.hero h1 span {
+    display: block;
+
+    color: #e7a67e;
+}
+
+
+.subtitle {
+    max-width: 780px;
+
+    font-size: 1.18rem;
+    line-height: 1.75;
+
+    color: #e6ddd5;
+
+    margin-bottom: 36px;
+}
+
+
+.meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+
+.meta span {
+    padding: 8px 14px;
+
+    border: 1px solid rgba(255, 255, 255, 0.15);
+
+    border-radius: 999px;
+
+    background: rgba(255, 255, 255, 0.06);
+
+    color: #e8dfd7;
+
+    font-size: 0.86rem;
+
+    backdrop-filter: blur(8px);
+}
+
+
+/* =========================================================
+   MAIN
+========================================================= */
+
+main.container {
+    padding-top: 42px;
+    padding-bottom: 100px;
+}
+
+
+/* =========================================================
+   SECTIONS
+========================================================= */
+
+section {
+    position: relative;
+
+    background: var(--surface);
+
+    margin: 30px 0;
+
+    padding: 52px 58px;
+
+    border: 1px solid var(--border);
+
+    border-radius: 20px;
+
+    box-shadow: var(--shadow-sm);
+
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease;
+}
+
+
+section:hover {
+    box-shadow: var(--shadow-md);
+}
+
+
+/* section number accent */
+
+section h2 {
+    position: relative;
+
+    font-size: 2rem;
+
+    line-height: 1.25;
+
+    color: var(--ink);
+
+    margin-bottom: 30px;
+
+    letter-spacing: -0.03em;
+
+    padding-bottom: 17px;
+
+    border-bottom: 1px solid var(--border);
+}
+
+
+section h2::after {
+    content: "";
+
+    position: absolute;
+
+    left: 0;
+    bottom: -1px;
+
+    width: 62px;
+    height: 3px;
+
+    background: var(--accent);
+
+    border-radius: 10px;
+}
+
+
+section h3 {
+    font-size: 1.22rem;
+
+    color: var(--accent-dark);
+
+    margin-top: 36px;
+    margin-bottom: 12px;
+
+    letter-spacing: -0.01em;
+}
+
+
+section p {
+    margin-bottom: 18px;
+
+    color: var(--text);
+}
+
+
+section p:last-child {
+    margin-bottom: 0;
+}
+
+
+/* =========================================================
+   TEXT EMPHASIS
+========================================================= */
+
+strong {
+    color: var(--ink);
+    font-weight: 750;
+}
+
+
+/* =========================================================
+   LISTS
+========================================================= */
+
+ul,
+ol {
+    margin: 18px 0 24px 25px;
+
+    color: var(--text);
+}
+
+
+li {
+    margin-bottom: 9px;
+}
+
+
+li::marker {
+    color: var(--accent);
+    font-weight: 800;
+}
+
+
+/* =========================================================
+   BLOCKQUOTE
+========================================================= */
+
+blockquote {
+    position: relative;
+
+    margin: 30px 0;
+
+    padding: 25px 30px;
+
+    border-left: 4px solid var(--accent);
+
+    background: var(--accent-soft);
+
+    color: #67351f;
+
+    font-size: 1.12rem;
+
+    font-weight: 650;
+
+    border-radius: 0 14px 14px 0;
+}
+
+
+blockquote::before {
+    content: "“";
+
+    position: absolute;
+
+    top: -18px;
+    right: 22px;
+
+    font-family: Georgia, serif;
+
+    font-size: 4rem;
+
+    color: rgba(184, 92, 56, 0.15);
+}
+
+
+/* =========================================================
+   STAT CARDS
+========================================================= */
+
+.stats {
+    display: grid;
+
+    grid-template-columns:
+        repeat(auto-fit, minmax(165px, 1fr));
+
+    gap: 15px;
+
+    margin: 30px 0;
+}
+
+
+.stat {
+    background: var(--surface-soft);
+
+    border: 1px solid var(--border);
+
+    border-radius: 15px;
+
+    padding: 25px 18px;
+
+    text-align: center;
+
+    transition:
+        transform 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+
+.stat:hover {
+    transform: translateY(-4px);
+
+    background: #f8eee2;
+
+    box-shadow: var(--shadow-sm);
+}
+
+
+.stat strong {
+    display: block;
+
+    font-size: 2rem;
+
+    line-height: 1.1;
+
+    color: var(--accent);
+
+    margin-bottom: 8px;
+}
+
+
+.stat span {
+    display: block;
+
+    font-size: 0.86rem;
+
+    color: var(--muted);
+}
+
+
+/* =========================================================
+   TABLES
+========================================================= */
+
+table {
+    width: 100%;
+
+    border-collapse: separate;
+    border-spacing: 0;
+
+    margin: 28px 0;
+
+    overflow: hidden;
+
+    border: 1px solid var(--border);
+
+    border-radius: 14px;
+
+    background: var(--surface);
+}
+
+
+thead {
+    background: #3b3029;
+
+    color: #fffaf4;
+}
+
+
+th,
+td {
+    padding: 15px 17px;
+
+    text-align: left;
+
+    border-bottom: 1px solid var(--border);
+}
+
+
+th {
+    font-size: 0.86rem;
+
+    font-weight: 750;
+
+    letter-spacing: 0.01em;
+}
+
+
+td {
+    color: var(--text);
+
+    font-size: 0.92rem;
+}
+
+
+tbody tr:last-child td {
+    border-bottom: none;
+}
+
+
+tbody tr:nth-child(even) {
+    background: #faf6ef;
+}
+
+
+tbody tr:hover {
+    background: #f4e5d9;
+}
+
+
+/* =========================================================
+   CALLOUT
+========================================================= */
+
+.callout {
+    margin: 30px 0;
+
+    padding: 24px 28px;
+
+    background: #f5eadc;
+
+    border: 1px solid #e7cfb7;
+
+    border-left: 5px solid var(--gold);
+
+    border-radius: 13px;
+
+    color: #674a2e;
+
+    line-height: 1.7;
+}
+
+
+.callout strong {
+    color: #6d4425;
+}
+
+
+/* =========================================================
+   ACTION BOX
+========================================================= */
+
+.action {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    margin-top: 18px;
+
+    padding: 14px 23px;
+
+    background: var(--accent);
+
+    color: #fffaf5;
+
+    border-radius: 10px;
+
+    font-size: 0.84rem;
+
+    font-weight: 800;
+
+    letter-spacing: 0.06em;
+
+    text-transform: uppercase;
+
+    box-shadow:
+        0 8px 22px rgba(184, 92, 56, 0.22);
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+
+.action:hover {
+    background: var(--accent-dark);
+
+    transform: translateY(-2px);
+}
+
+
+/* =========================================================
+   LINKS
+========================================================= */
+
+a {
+    color: var(--accent-dark);
+
+    font-weight: 700;
+
+    text-decoration:
+        underline;
+
+    text-decoration-color: rgba(143, 64, 39, 0.35);
+
+    text-underline-offset: 3px;
+
+    transition:
+        color 0.2s ease,
+        text-decoration-color 0.2s ease;
+}
+
+
+a:hover {
+    color: var(--accent);
+
+    text-decoration-color: var(--accent);
+}
+
+
+/* =========================================================
+   CODE
+========================================================= */
+
+code {
+    padding: 3px 7px;
+
+    border-radius: 6px;
+
+    background: #eee6da;
+
+    color: var(--accent-dark);
+
+    font-family:
+        "SFMono-Regular",
+        Consolas,
+        "Liberation Mono",
+        monospace;
+
+    font-size: 0.9em;
+}
+
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+footer {
+    background: #302722;
+
+    color: #c8bbb0;
+
+    padding: 42px 0;
+
+    border-top: 1px solid #493a32;
+}
+
+
+footer p {
+    margin-bottom: 6px;
+
+    font-size: 0.88rem;
+}
+
+
+footer p:last-child {
+    margin-bottom: 0;
+}
+
+
+footer strong {
+    color: #eee3d9;
+}
+
+
+/* =========================================================
+   IMAGE / CHART SUPPORT
+========================================================= */
+
+figure {
+    margin: 35px 0;
+}
+
+
+figure img {
+    display: block;
+
+    width: 100%;
+    height: auto;
+
+    border: 1px solid var(--border);
+
+    border-radius: 15px;
+
+    background: var(--surface);
+
+    box-shadow: var(--shadow-sm);
+}
+
+
+figcaption {
+    margin-top: 10px;
+
+    color: var(--muted);
+
+    font-size: 0.84rem;
+
+    text-align: center;
+}
+
+
+/* =========================================================
+   SECTION DIVIDER
+========================================================= */
+
+section + section {
+    position: relative;
+}
+
+
+section + section::before {
+    content: "";
+
+    position: absolute;
+
+    top: -16px;
+    left: 50%;
+
+    width: 5px;
+    height: 5px;
+
+    background: var(--gold);
+
+    border-radius: 50%;
+
+    transform: translateX(-50%);
+}
+
+
+/* =========================================================
+   RESPONSIVE — TABLET
+========================================================= */
+
+@media (max-width: 800px) {
+
+    .hero {
+        padding: 70px 0 62px;
+    }
+
+
+    .hero h1 {
+        font-size: 2.9rem;
+    }
+
+
+    .subtitle {
+        font-size: 1.05rem;
+    }
+
+
+    section {
+        padding: 40px 34px;
+    }
+
+
+    section h2 {
+        font-size: 1.75rem;
+    }
+
+
+    .stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+}
+
+
+/* =========================================================
+   RESPONSIVE — MOBILE
+========================================================= */
+
+@media (max-width: 550px) {
+
+    .container {
+        width: 91%;
+    }
+
+
+    .hero {
+        padding: 55px 0 48px;
+    }
+
+
+    .eyebrow {
+        font-size: 0.68rem;
+
+        letter-spacing: 0.12em;
+    }
+
+
+    .hero h1 {
+        font-size: 2.3rem;
+
+        letter-spacing: -0.04em;
+    }
+
+
+    .subtitle {
+        font-size: 0.98rem;
+    }
+
+
+    .meta {
+        flex-direction: column;
+
+        align-items: flex-start;
+    }
+
+
+    .meta span {
+        font-size: 0.8rem;
+    }
+
+
+    main.container {
+        padding-top: 20px;
+    }
+
+
+    section {
+        padding: 30px 22px;
+
+        margin: 20px 0;
+
+        border-radius: 15px;
+    }
+
+
+    section h2 {
+        font-size: 1.5rem;
+
+        margin-bottom: 24px;
+    }
+
+
+    section h3 {
+        font-size: 1.1rem;
+    }
+
+
+    .stats {
+        grid-template-columns: 1fr 1fr;
+
+        gap: 10px;
+    }
+
+
+    .stat {
+        padding: 18px 9px;
+    }
+
+
+    .stat strong {
+        font-size: 1.45rem;
+    }
+
+
+    .stat span {
+        font-size: 0.75rem;
+    }
+
+
+    table {
+        display: block;
+
+        overflow-x: auto;
+
+        white-space: nowrap;
+    }
+
+
+    blockquote {
+        padding: 19px 20px;
+
+        font-size: 0.98rem;
+    }
+
+
+    .action {
+        width: 100%;
+
+        text-align: center;
+    }
+
+}
